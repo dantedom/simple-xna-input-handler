@@ -1,0 +1,6 @@
+C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\obj\x86\Debug\ResolveAssemblyReference.cache
+C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
+C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\bin\x86\Debug\GameInputHandler.dll
+C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\bin\x86\Debug\GameInputHandler.pdb
+C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\obj\x86\Debug\GameInputHandler.dll
+C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\obj\x86\Debug\GameInputHandler.pdb
