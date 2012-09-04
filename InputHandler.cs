@@ -10,8 +10,35 @@
     public delegate void Continuous_LeftClick(object sender);
     public delegate void RightClick(object sender);
     public delegate void Continuous_RightClick(object sender);
+ 
+    public enum MouseButtons
+    {
+        // Summary:
+        //     No mouse button was pressed.
+        None = 0,
+        //
+        // Summary:
+        //     The left mouse button was pressed.
+        Left = 1048576,
+        //
+        // Summary:
+        //     The right mouse button was pressed.
+        Right = 2097152,
+        //
+        // Summary:
+        //     The middle mouse button was pressed.
+        Middle = 4194304,
+        //
+        // Summary:
+        //     The first XButton was pressed.
+        XButton1 = 8388608,
+        //
+        // Summary:
+        //     The second XButton was pressed.
+        XButton2 = 16777216,
+    }
 
-    public class InputHandler  : GameComponent
+    public class InputH  : GameComponent
     {
         public LeftClick leftclick;
         public Continuous_LeftClick continuous_leftclick;
@@ -34,10 +61,16 @@
         public int MouseScroll;
         public int Old_MouseScroll;
         public string[] StringKeys_Once;
-        public InputHandler(Game game)
+        public bool mouseLeftClicked_Continuous;
+        public bool mouseRightClicked_Continuous;
+        public MouseButtons Buttons;
+        public bool mouseMiddlelicked;
+        public bool mouseButton1;
+        public bool mouseButton2;
+        public InputH(Game game)
             : base(game)
         {
-
+            this.Buttons = new MouseButtons();
 
         }
         public static string GetEnum(object enumerator)
@@ -240,14 +273,19 @@
             this.MouseScroll = this.MouseState.ScrollWheelValue;
             this.MouseNormal = new Vector2((float)this.MouseState.X, (float)this.MouseState.Y);
             this.mouseLeftClicked = (this.MouseState.LeftButton == ButtonState.Pressed) && (this.Old_MouseState.LeftButton != this.MouseState.LeftButton);
+            this.mouseMiddlelicked = (this.MouseState.MiddleButton == ButtonState.Pressed) && (this.Old_MouseState.MiddleButton != this.MouseState.MiddleButton);
             this.mouseRightClicked = (this.MouseState.RightButton == ButtonState.Pressed) && (this.Old_MouseState.RightButton != this.MouseState.RightButton);
+            this.mouseButton1 = (this.MouseState.XButton1 == ButtonState.Pressed) && (this.Old_MouseState.XButton1 != this.MouseState.XButton1);
+            this.mouseButton2 = (this.MouseState.XButton2 == ButtonState.Pressed) && (this.Old_MouseState.XButton2 != this.MouseState.XButton2);
             if (this.MouseState.LeftButton == ButtonState.Pressed)
             {
+                mouseLeftClicked_Continuous = true;
                 if (this.continuous_leftclick != null)
                 {
                     this.continuous_leftclick(this);
                 }
             }
+            else { mouseLeftClicked_Continuous = false; }
             if (this.mouseLeftClicked)
             {
                 if (this.leftclick != null)
@@ -257,12 +295,15 @@
             }
             if (this.MouseState.RightButton == ButtonState.Pressed)
             {
+                mouseRightClicked_Continuous = true;
+
                 if (this.continuous_rightclick != null)
                 {
                     this.continuous_rightclick(this);
                 }
 
             }
+            else { mouseRightClicked_Continuous = false; }
             if (this.mouseRightClicked)
             {
                 if (this.rightclick != null)
@@ -283,6 +324,76 @@
                 }
             }
             this.StringKeys_Once = PressedKeysOnce.ToArray();
+
+            this.Buttons = new MouseButtons();
+
+            if (this.MouseState.RightButton == ButtonState.Pressed)
+            {
+                if (this.Buttons == MouseButtons.None)
+                {
+                    this.Buttons = MouseButtons.Right;
+                }
+                else
+                {
+                    this.Buttons |= MouseButtons.Right;
+                }
+            }
+
+
+            if (this.MouseState.LeftButton == ButtonState.Pressed)
+            {
+                if (this.Buttons == MouseButtons.None)
+                {
+                    this.Buttons = MouseButtons.Left;
+                }
+                else
+                {
+                    this.Buttons |= MouseButtons.Left;
+                }
+            }
+
+
+            if (this.MouseState.MiddleButton == ButtonState.Pressed)
+            {
+                if (this.Buttons == MouseButtons.None)
+                {
+                    this.Buttons = MouseButtons.Middle;
+                }
+                else
+                {
+                    this.Buttons |= MouseButtons.Middle;
+                }
+            }
+
+
+            if (this.MouseState.XButton1 == ButtonState.Pressed)
+            {
+                if (this.Buttons == MouseButtons.None)
+                {
+                    this.Buttons = MouseButtons.XButton1;
+                }
+                else
+                {
+                    this.Buttons |= MouseButtons.XButton1;
+                }
+            }
+
+
+            if (this.MouseState.XButton2 == ButtonState.Pressed)
+            {
+                if (this.Buttons == MouseButtons.None)
+                {
+                    this.Buttons = MouseButtons.XButton2;
+                }
+                else
+                {
+                    this.Buttons |= MouseButtons.XButton2;
+                }
+            }
+
+            this.X = (int)MouseNormal.X;
+            this.Y = (int)MouseNormal.Y;
+
         }
         public bool IsTextPressed_Continuous(string key)
         {
@@ -297,7 +408,11 @@
 
         }
 
- 
+
+
+        public int X { get; set; }
+
+        public int Y { get; set; }
     }
 }
 
