@@ -352,10 +352,11 @@
             #region mousebuttomsDown
 
     this.MouseButtonsDown = new MouseButtons();
+    bool firedown = false;
             if (this.MouseState.RightButton == ButtonState.Pressed)
             {
-                firemousedown();
-             
+
+                firedown = true;
                 if (this.MouseButtonsDown == MouseButtons.None)
                 {
                     this.MouseButtonsDown = MouseButtons.Right;
@@ -369,8 +370,7 @@
 
             if (this.MouseState.LeftButton == ButtonState.Pressed)
             {
-                firemousedown();
-             
+                firedown = true;             
                 if (this.MouseButtonsDown == MouseButtons.None)
                 {
                     this.MouseButtonsDown = MouseButtons.Left;
@@ -384,8 +384,8 @@
 
             if (this.MouseState.MiddleButton == ButtonState.Pressed)
             {
-                firemousedown();
-             
+
+                firedown = true;
                 if (this.MouseButtonsDown == MouseButtons.None)
                 {
                     this.MouseButtonsDown = MouseButtons.Middle;
@@ -399,7 +399,8 @@
 
             if (this.MouseState.XButton1 == ButtonState.Pressed)
             {
-                firemousedown();
+                firedown = true;
+                 
              
                 if (this.MouseButtonsDown == MouseButtons.None)
                 {
@@ -414,7 +415,7 @@
 
             if (this.MouseState.XButton2 == ButtonState.Pressed)
             {
-                firemousedown();
+                firedown = true;
              
                 if (this.MouseButtonsDown == MouseButtons.None)
                 {
@@ -425,14 +426,15 @@
                     this.MouseButtonsDown |= MouseButtons.XButton2;
                 }
             }
+            if (firedown) { firemousedown(); }
             #endregion
 
             #region mousebuttomsUp
-
+            bool fireup = false;
             this.MouseButtonsUp = new MouseButtons();
             if (this.MouseState.RightButton != ButtonState.Pressed)
             {
-                this.firemouseup();
+                fireup = true;
                 if (this.MouseButtonsUp == MouseButtons.None)
                 {
                     this.MouseButtonsUp = MouseButtons.Right;
@@ -446,7 +448,7 @@
 
             if (this.MouseState.LeftButton != ButtonState.Pressed)
             {
-                this.firemouseup();
+                fireup = true;
                 if (this.MouseButtonsUp == MouseButtons.None)
                 {
                     this.MouseButtonsUp = MouseButtons.Left;
@@ -460,7 +462,7 @@
 
             if (this.MouseState.MiddleButton != ButtonState.Pressed)
             {
-                this.firemouseup();
+                fireup = true;
                 if (this.MouseButtonsUp == MouseButtons.None)
                 {
                     this.MouseButtonsUp = MouseButtons.Middle;
@@ -474,7 +476,7 @@
 
             if (this.MouseState.XButton1 != ButtonState.Pressed)
             {
-                this.firemouseup();
+                fireup = true;
                 if (this.MouseButtonsUp == MouseButtons.None)
                 {
                     this.MouseButtonsUp = MouseButtons.XButton1;
@@ -488,7 +490,7 @@
 
             if (this.MouseState.XButton2 != ButtonState.Pressed)
             {
-                this.firemouseup();
+                fireup = true;
                 if (this.MouseButtonsUp == MouseButtons.None)
                 {
                     this.MouseButtonsUp = MouseButtons.XButton2;
@@ -498,6 +500,8 @@
                     this.MouseButtonsUp |= MouseButtons.XButton2;
                 }
             }
+            if (fireup) { this.firemouseup(); }
+
             #endregion
 
             this.X = (int)MouseNormal.X;
@@ -541,6 +545,22 @@
         public int X { get; set; }
 
         public int Y { get; set; }
+
+        internal bool Contains(Keys keys)
+        {
+            return this.pressedKeys.Contains(keys);
+        }
+        internal bool Contains(Keys[] keys)
+        {
+            for (int i = 0; i < keys.Length; i++)
+            {
+                Keys key = keys[i];
+
+                return this.pressedKeys.Contains(key);
+                
+            }
+            return false;
+        }
     }
 }
 
