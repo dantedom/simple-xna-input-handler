@@ -62,8 +62,10 @@
         /// Fires when any mouse key is NOT PRESSED constantly
         /// </summary>
         public InputDelegate MouseUp_Constant;
- 
-
+        /// <summary>
+        /// Fires when the mouse wheel value changes
+        /// </summary>
+        public InputDelegate MouseWheel;
 
         public bool CapsLock;
         public KeyboardState keyboardState;
@@ -80,8 +82,8 @@
         public string[] StringKeys_Constant;
         public string[] StringKeys;
         public string[] Old_StringKeys;
-        public int MouseScroll;
-        public int Old_MouseScroll;
+        public int New_MouseScroll_Value;
+        public int Old_MouseScroll_Value;
  
         public bool mouseLeftClicked_Continuous;
         public bool mouseRightClicked_Continuous;
@@ -102,10 +104,16 @@
         public MouseButtons MouseButtonsUp;
         public MouseButtons MouseButtonsUp_Constant;
         private MouseButtons Old_MouseButtonsUp_Constant;
+        public bool MouseScrollValueUP;
+        public bool MouseScrollValueDown;
+        public bool MouseScrollValueConstant;
         public InputHelper(Game game)
             : base(game)
         {
             this.MouseButtonsDown_Constant = new MouseButtons();
+            this.MouseButtonsDown = new MouseButtons();
+
+            this.MouseButtonsUp_Constant = new MouseButtons();
             this.MouseButtonsUp = new MouseButtons();
 
         }
@@ -319,9 +327,14 @@
             this.Old_MouseState = this.MouseState;
             this.MouseState = Mouse.GetState();
 
-            this.Old_MouseScroll = this.MouseScroll;
-            this.MouseScroll = this.MouseState.ScrollWheelValue;
+            this.Old_MouseScroll_Value = this.New_MouseScroll_Value;
+            this.New_MouseScroll_Value = this.MouseState.ScrollWheelValue;
             this.MouseNormal = new Vector2((float)this.MouseState.X, (float)this.MouseState.Y);
+
+            this.MouseScrollValueUP = Old_MouseScroll_Value < New_MouseScroll_Value;
+            this.MouseScrollValueDown = Old_MouseScroll_Value > New_MouseScroll_Value;
+            this.MouseScrollValueConstant = Old_MouseScroll_Value == New_MouseScroll_Value;
+            FireDelegate(MouseScrollValueConstant == false, MouseWheel);
 
             this.X = (int)MouseNormal.X;
             this.Y = (int)MouseNormal.Y;
