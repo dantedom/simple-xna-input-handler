@@ -6,16 +6,9 @@
     using System;
     using System.Linq;
 
-    public delegate void LeftClick(object sender);
-    public delegate void Continuous_LeftClick(object sender);
-    public delegate void RightClick(object sender);
-    public delegate void Continuous_RightClick(object sender);
-    public delegate void MouseMove(InputH sender);
-    public delegate void MouseUp(InputH sender);
-    public delegate void MouseDown(InputH sender);
-
-    public delegate void PressedKeys(Microsoft.Xna.Framework.Input.Keys[] keys);
  
+    public delegate void InputDelegate(InputHelper sender);
+    [Flags]
     public enum MouseButtons
     {
         // Summary:
@@ -43,22 +36,40 @@
         XButton2 = 16777216,
     }
 
-    public class InputH  : GameComponent
+    public class InputHelper  : GameComponent
     {
+        /// <summary>
+        /// Contant Fires at the end of all checks
+        /// </summary>
+        public InputDelegate ConstantCall;
+        /// <summary>
+        /// Fires when the mouse position changes
+        /// </summary>
+        public InputDelegate MouseMouse;
+        /// <summary>
+        /// Fires when any mouse key is PRESSED once
+        /// </summary>
+        public InputDelegate MouseDown;
+        /// <summary>
+        /// Fires when any mouse key is PRESSED constantly
+        /// </summary>
+        public InputDelegate MouseDown_Constant;
+        /// <summary>
+        /// Fires when any mouse key is NOT PRESSED once
+        /// </summary>
+        public InputDelegate MouseUp;
+        /// <summary>
+        /// Fires when any mouse key is NOT PRESSED constantly
+        /// </summary>
+        public InputDelegate MouseUp_Constant;
+ 
 
-        public PressedKeys PressedKeysArray;
-        public MouseMove mouseMove;
-        public MouseDown mouseDown;
-        public MouseUp mouseUp;
-        public LeftClick leftclick;
-        public Continuous_LeftClick continuous_leftclick;
-        public RightClick rightclick;
-        public Continuous_RightClick continuous_rightclick;
+
         public bool CapsLock;
         public KeyboardState keyboardState;
-        public bool mouseLeftClicked;
+        public bool mouseLeftClicked_Single;
         public Vector2 MouseNormal;
-        public bool mouseRightClicked;
+        public bool mouseRightClicked_Single;
         public Microsoft.Xna.Framework.Input.MouseState MouseState;
         public Vector2 mouseWorld;
         public KeyboardState Old_keyboardState;
@@ -66,23 +77,35 @@
         public int Old_Scroll;
         public Keys[] pressedKeys;
         public Keys[] Old_pressedKeys;
+        public string[] StringKeys_Constant;
         public string[] StringKeys;
         public string[] Old_StringKeys;
         public int MouseScroll;
         public int Old_MouseScroll;
-        public string[] StringKeys_Once;
+ 
         public bool mouseLeftClicked_Continuous;
         public bool mouseRightClicked_Continuous;
-        public MouseButtons MouseButtonsDown;
-        public bool mouseMiddlelicked;
-        public bool mouseButton1;
-        public bool mouseButton2;
+  
+        public bool mouseMiddleClicked_Single;
+        public bool mouseButton1Clicked_Single;
+        public bool mouseButton2Click_Single;
         public Vector2 Old_MouseNormal;
+     
+        public bool mouseMiddleClicked_Continuous;
+        public bool mouseButton1Clicked_Continuous;
+        public bool mouseButton2Click_Continuous;
+
+        public MouseButtons MouseButtonsDown;
+        public MouseButtons MouseButtonsDown_Constant;
+        private MouseButtons Old_MouseButtonsDown_Constant;
+ 
         public MouseButtons MouseButtonsUp;
-        public InputH(Game game)
+        public MouseButtons MouseButtonsUp_Constant;
+        private MouseButtons Old_MouseButtonsUp_Constant;
+        public InputHelper(Game game)
             : base(game)
         {
-            this.MouseButtonsDown = new MouseButtons();
+            this.MouseButtonsDown_Constant = new MouseButtons();
             this.MouseButtonsUp = new MouseButtons();
 
         }
@@ -275,268 +298,160 @@
                     this.CapsLock = true;
                 }
             }
-            this.Old_StringKeys = this.StringKeys;
-            this.StringKeys = new string[this.pressedKeys.Length];
+            this.Old_StringKeys = this.StringKeys_Constant;
+            this.StringKeys_Constant = new string[this.pressedKeys.Length];
             for (int i = 0; i < this.pressedKeys.Length; i++)
             {
-                this.StringKeys[i] = this.GetEnumName(this.pressedKeys[i]);
+                this.StringKeys_Constant[i] = this.GetEnumName(this.pressedKeys[i]);
             }
-            this.MouseState = Mouse.GetState();
-            this.Old_MouseScroll = this.MouseScroll;
-            this.MouseScroll = this.MouseState.ScrollWheelValue;
-            this.MouseNormal = new Vector2((float)this.MouseState.X, (float)this.MouseState.Y);
-            this.mouseLeftClicked = (this.MouseState.LeftButton == ButtonState.Pressed) && (this.Old_MouseState.LeftButton != this.MouseState.LeftButton);
-            this.mouseMiddlelicked = (this.MouseState.MiddleButton == ButtonState.Pressed) && (this.Old_MouseState.MiddleButton != this.MouseState.MiddleButton);
-            this.mouseRightClicked = (this.MouseState.RightButton == ButtonState.Pressed) && (this.Old_MouseState.RightButton != this.MouseState.RightButton);
-            this.mouseButton1 = (this.MouseState.XButton1 == ButtonState.Pressed) && (this.Old_MouseState.XButton1 != this.MouseState.XButton1);
-            this.mouseButton2 = (this.MouseState.XButton2 == ButtonState.Pressed) && (this.Old_MouseState.XButton2 != this.MouseState.XButton2);
-
-
-
-            if (this.MouseState.LeftButton == ButtonState.Pressed)
-            {
-                 mouseLeftClicked_Continuous = true;
-                if (this.continuous_leftclick != null)
-                {
-                    this.continuous_leftclick(this);
-                }
-            }
-            else { mouseLeftClicked_Continuous = false; }
-
-            if (this.mouseLeftClicked)
-            {
-                
-                if (this.leftclick != null)
-                {
-                    this.leftclick(this);
-                }
-            }
-            if (this.MouseState.RightButton == ButtonState.Pressed)
-            {
-
-
-               
-                mouseRightClicked_Continuous = true;
-
-                if (this.continuous_rightclick != null)
-                {
-                    this.continuous_rightclick(this);
-                }
-
-            }
-            else { mouseRightClicked_Continuous = false; }
-            if (this.mouseRightClicked)
-            {
-          
-                if (this.rightclick != null)
-                {
-                    this.rightclick(this);
-                }
-            }
-
-            this.Old_MouseState = this.MouseState;
             List<string> PressedKeysOnce = new List<string>();
-            for (int i = 0; i < StringKeys.Length; i++)
+            for (int i = 0; i < StringKeys_Constant.Length; i++)
             {
-                string key = StringKeys[i];
+                string key = StringKeys_Constant[i];
                 if (!Old_StringKeys.Contains<string>(key))
                 {
 
                     PressedKeysOnce.Add(key);
                 }
             }
-            this.StringKeys_Once = PressedKeysOnce.ToArray();
+            this.StringKeys = PressedKeysOnce.ToArray();
 
-        
+            this.Old_MouseState = this.MouseState;
+            this.MouseState = Mouse.GetState();
 
-            #region mousebuttomsDown
-
-    this.MouseButtonsDown = new MouseButtons();
-    bool firedown = false;
-            if (this.MouseState.RightButton == ButtonState.Pressed)
-            {
-
-                firedown = true;
-                if (this.MouseButtonsDown == MouseButtons.None)
-                {
-                    this.MouseButtonsDown = MouseButtons.Right;
-                }
-                else
-                {
-                    this.MouseButtonsDown |= MouseButtons.Right;
-                }
-            }
-
-
-            if (this.MouseState.LeftButton == ButtonState.Pressed)
-            {
-                firedown = true;             
-                if (this.MouseButtonsDown == MouseButtons.None)
-                {
-                    this.MouseButtonsDown = MouseButtons.Left;
-                }
-                else
-                {
-                    this.MouseButtonsDown |= MouseButtons.Left;
-                }
-            }
-
-
-            if (this.MouseState.MiddleButton == ButtonState.Pressed)
-            {
-
-                firedown = true;
-                if (this.MouseButtonsDown == MouseButtons.None)
-                {
-                    this.MouseButtonsDown = MouseButtons.Middle;
-                }
-                else
-                {
-                    this.MouseButtonsDown |= MouseButtons.Middle;
-                }
-            }
-
-
-            if (this.MouseState.XButton1 == ButtonState.Pressed)
-            {
-                firedown = true;
-                 
-             
-                if (this.MouseButtonsDown == MouseButtons.None)
-                {
-                    this.MouseButtonsDown = MouseButtons.XButton1;
-                }
-                else
-                {
-                    this.MouseButtonsDown |= MouseButtons.XButton1;
-                }
-            }
-
-
-            if (this.MouseState.XButton2 == ButtonState.Pressed)
-            {
-                firedown = true;
-             
-                if (this.MouseButtonsDown == MouseButtons.None)
-                {
-                    this.MouseButtonsDown = MouseButtons.XButton2;
-                }
-                else
-                {
-                    this.MouseButtonsDown |= MouseButtons.XButton2;
-                }
-            }
-            if (firedown) { firemousedown(); }
-            #endregion
-
-            #region mousebuttomsUp
-            bool fireup = false;
-            this.MouseButtonsUp = new MouseButtons();
-            if (this.MouseState.RightButton != ButtonState.Pressed)
-            {
-                fireup = true;
-                if (this.MouseButtonsUp == MouseButtons.None)
-                {
-                    this.MouseButtonsUp = MouseButtons.Right;
-                }
-                else
-                {
-                    this.MouseButtonsUp |= MouseButtons.Right;
-                }
-            }
-
-
-            if (this.MouseState.LeftButton != ButtonState.Pressed)
-            {
-                fireup = true;
-                if (this.MouseButtonsUp == MouseButtons.None)
-                {
-                    this.MouseButtonsUp = MouseButtons.Left;
-                }
-                else
-                {
-                    this.MouseButtonsUp |= MouseButtons.Left;
-                }
-            }
-
-
-            if (this.MouseState.MiddleButton != ButtonState.Pressed)
-            {
-                fireup = true;
-                if (this.MouseButtonsUp == MouseButtons.None)
-                {
-                    this.MouseButtonsUp = MouseButtons.Middle;
-                }
-                else
-                {
-                    this.MouseButtonsUp |= MouseButtons.Middle;
-                }
-            }
-
-
-            if (this.MouseState.XButton1 != ButtonState.Pressed)
-            {
-                fireup = true;
-                if (this.MouseButtonsUp == MouseButtons.None)
-                {
-                    this.MouseButtonsUp = MouseButtons.XButton1;
-                }
-                else
-                {
-                    this.MouseButtonsUp |= MouseButtons.XButton1;
-                }
-            }
-
-
-            if (this.MouseState.XButton2 != ButtonState.Pressed)
-            {
-                fireup = true;
-                if (this.MouseButtonsUp == MouseButtons.None)
-                {
-                    this.MouseButtonsUp = MouseButtons.XButton2;
-                }
-                else
-                {
-                    this.MouseButtonsUp |= MouseButtons.XButton2;
-                }
-            }
-            if (fireup) { this.firemouseup(); }
-
-            #endregion
+            this.Old_MouseScroll = this.MouseScroll;
+            this.MouseScroll = this.MouseState.ScrollWheelValue;
+            this.MouseNormal = new Vector2((float)this.MouseState.X, (float)this.MouseState.Y);
 
             this.X = (int)MouseNormal.X;
             this.Y = (int)MouseNormal.Y;
+
+            this.mouseLeftClicked_Single = (this.MouseState.LeftButton == ButtonState.Pressed) && (this.Old_MouseState.LeftButton != this.MouseState.LeftButton);
+            this.mouseMiddleClicked_Single = (this.MouseState.MiddleButton == ButtonState.Pressed) && (this.Old_MouseState.MiddleButton != this.MouseState.MiddleButton);
+            this.mouseRightClicked_Single = (this.MouseState.RightButton == ButtonState.Pressed) && (this.Old_MouseState.RightButton != this.MouseState.RightButton);
+            this.mouseButton1Clicked_Single = (this.MouseState.XButton1 == ButtonState.Pressed) && (this.Old_MouseState.XButton1 != this.MouseState.XButton1);
+            this.mouseButton2Click_Single = (this.MouseState.XButton2 == ButtonState.Pressed) && (this.Old_MouseState.XButton2 != this.MouseState.XButton2);
+
+            this.mouseLeftClicked_Continuous = (this.MouseState.LeftButton == ButtonState.Pressed);
+            this.mouseMiddleClicked_Continuous = (this.MouseState.MiddleButton == ButtonState.Pressed);
+            this.mouseRightClicked_Continuous = (this.MouseState.RightButton == ButtonState.Pressed);
+            this.mouseButton1Clicked_Continuous = (this.MouseState.XButton1 == ButtonState.Pressed);
+            this.mouseButton2Click_Continuous = (this.MouseState.XButton2 == ButtonState.Pressed);
+
+
+
+
+
+
+
+
+            #region mousebuttomsDown
+
+   
+            this.Old_MouseButtonsDown_Constant = this.MouseButtonsDown_Constant;
+            this.MouseButtonsDown_Constant = MouseButtons.None;
+            this.MouseButtonsDown = MouseButtons.None;
+            CheckButtom(this.MouseState.RightButton, ButtonState.Pressed, MouseButtons.Right, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.LeftButton, ButtonState.Pressed, MouseButtons.Left, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.MiddleButton, ButtonState.Pressed, MouseButtons.Middle, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.XButton1, ButtonState.Pressed, MouseButtons.XButton1, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.XButton2, ButtonState.Pressed, MouseButtons.XButton2, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            FireDelegate(MouseButtonsDown_Constant != MouseButtons.None, this.MouseDown_Constant);
+            FireDelegate(MouseButtonsDown != MouseButtons.None, this.MouseDown);
+
+
+
+
+
+
+
+
+            #endregion
+
+            #region mousebuttomsUp
+
+            this.Old_MouseButtonsUp_Constant = this.MouseButtonsUp_Constant;
+            this.MouseButtonsUp_Constant = MouseButtons.None;
+            this.MouseButtonsUp = MouseButtons.None;
+            CheckButtom(this.MouseState.RightButton, ButtonState.Released, MouseButtons.Right, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.LeftButton, ButtonState.Released, MouseButtons.Left, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.MiddleButton, ButtonState.Released, MouseButtons.Middle, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.XButton1, ButtonState.Released, MouseButtons.XButton1, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.XButton2, ButtonState.Released, MouseButtons.XButton2, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            FireDelegate(MouseButtonsUp_Constant != MouseButtons.None, this.MouseUp_Constant);
+            FireDelegate(MouseButtonsUp != MouseButtons.None, this.MouseUp);
+
+            #endregion
+
             if (Old_MouseNormal != MouseNormal)
             {
-                if (this.mouseMove != null)
+                if (this.MouseMouse != null)
                 {
-                    this.mouseMove(this);
+                    this.MouseMouse(this);
                 }
                 Old_MouseNormal = MouseNormal;
             }
-
-            if (this.PressedKeysArray != null) { this.PressedKeysArray(this.pressedKeys); }
+            if (this.ConstantCall != null)
+            {
+                this.ConstantCall(this);
+            }
         }
 
-        private void firemouseup()
+
+        private void CheckButtom(ButtonState buttonState, ButtonState buttostatetockeck, MouseButtons buttomtockeck, MouseButtons constant, MouseButtons oldconstant, MouseButtons once, out MouseButtons Constant, out MouseButtons Once)
         {
-            if (this.mouseUp != null) { this.mouseUp(this); }
+
+
+            if (buttonState == buttostatetockeck)
+            {
+                //constant
+                if (constant == MouseButtons.None)
+                {
+                    constant = buttomtockeck;
+                }
+                else
+                {
+                    constant |= buttomtockeck;
+                }
+                //once
+                if (!oldconstant.HasFlag(buttomtockeck))
+                {
+                    if (once == MouseButtons.None)
+                    {
+                        once = buttomtockeck;
+                    }
+                    else
+                    {
+                        once |= buttomtockeck;
+                    }
+                }
+            }
+
+            Once = once;
+            Constant = constant;
+
         }
 
-        private void firemousedown()
+
+        private void FireDelegate(bool fire, InputDelegate handle )
         {
-            if (this.mouseDown != null) { this.mouseDown(this); }
+            if (fire && handle != null)
+            {
+                handle(this);
+
+            }
         }
+
         public bool IsTextPressed_Continuous(string key)
         {
 
-            return this.StringKeys.Contains<string>(key);
+            return this.StringKeys_Constant.Contains<string>(key);
            
         }
         public bool IsTextPressed_Once(string key)
         {
 
-            return this.StringKeys_Once.Contains<string>(key);
+            return this.StringKeys.Contains<string>(key);
 
         }
 
