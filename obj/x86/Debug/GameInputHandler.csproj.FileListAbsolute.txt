@@ -10,11 +10,3 @@ C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\si
 C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\obj\x86\Debug\Microsoft.Xna.Framework.RuntimeProfile.txt
 C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\obj\x86\Debug\GameInputHandler.dll
 C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\obj\x86\Debug\GameInputHandler.pdb
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\MonoGame.Framework.Windows.dll
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\Lidgren.Network.Windows.dll
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\OpenTK.dll
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\Tao.Sdl.dll
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\MonoGame.Framework.Windows.pdb
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\Lidgren.Network.Windows.pdb
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\Lidgren.Network.Windows.xml
-C:\Dropbox\personal projects\fred's game farseer\fred's game\GameInputHandler\simple-xna-input-handler\bin\x86\Debug\OpenTK.xml

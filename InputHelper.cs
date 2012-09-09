@@ -1,4 +1,4 @@
-﻿namespace InputHandler
+﻿namespace InputHelp
 {
     using System.Collections.Generic;
     using Microsoft.Xna.Framework;
@@ -9,7 +9,7 @@
  
     public delegate void InputDelegate(InputHelper sender);
     [Flags]
-    public enum MouseButtons
+    public enum Mouse_Buttoms
     {
         // Summary:
         //     No mouse button was pressed.
@@ -36,7 +36,7 @@
         XButton2 = 16777216,
     }
 
-    public class InputHelper  : GameComponent
+    public class InputHelper   
     {
         /// <summary>
         /// Contant Fires at the end of all checks
@@ -66,6 +66,14 @@
         /// Fires when the mouse wheel value changes
         /// </summary>
         public InputDelegate MouseWheel;
+        /// <summary>
+        /// Fires when the Keyboard Keys Changes 
+        /// </summary>
+        public InputDelegate KeyboardKeys_Once;
+        /// <summary>
+        /// Fires when the Keyboard Keys Changes contantly
+        /// </summary>
+        public InputDelegate KeyboardKeys_Contant;
 
         public bool CapsLock;
         public KeyboardState keyboardState;
@@ -77,11 +85,12 @@
         public KeyboardState Old_keyboardState;
         public Microsoft.Xna.Framework.Input.MouseState Old_MouseState;
         public int Old_Scroll;
-        public Keys[] pressedKeys;
+        public Keys[] PressedKeys;
+        public Keys[] pressedKeys_Constant;
         public Keys[] Old_pressedKeys;
         public string[] StringKeys_Constant;
         public string[] StringKeys;
-        public string[] Old_StringKeys;
+         
         public int New_MouseScroll_Value;
         public int Old_MouseScroll_Value;
  
@@ -97,24 +106,25 @@
         public bool mouseButton1Clicked_Continuous;
         public bool mouseButton2Click_Continuous;
 
-        public MouseButtons MouseButtonsDown;
-        public MouseButtons MouseButtonsDown_Constant;
-        private MouseButtons Old_MouseButtonsDown_Constant;
+        public Mouse_Buttoms MouseButtonsDown;
+        public Mouse_Buttoms MouseButtonsDown_Constant;
+        private Mouse_Buttoms Old_MouseButtonsDown_Constant;
  
-        public MouseButtons MouseButtonsUp;
-        public MouseButtons MouseButtonsUp_Constant;
-        private MouseButtons Old_MouseButtonsUp_Constant;
+        public Mouse_Buttoms MouseButtonsUp;
+        public Mouse_Buttoms MouseButtonsUp_Constant;
+        private Mouse_Buttoms Old_MouseButtonsUp_Constant;
         public bool MouseScrollValueUP;
         public bool MouseScrollValueDown;
         public bool MouseScrollValueConstant;
-        public InputHelper(Game game)
-            : base(game)
+        
+        public InputHelper(   )
+         
         {
-            this.MouseButtonsDown_Constant = new MouseButtons();
-            this.MouseButtonsDown = new MouseButtons();
+            this.MouseButtonsDown_Constant = new Mouse_Buttoms();
+            this.MouseButtonsDown = new Mouse_Buttoms();
 
-            this.MouseButtonsUp_Constant = new MouseButtons();
-            this.MouseButtonsUp = new MouseButtons();
+            this.MouseButtonsUp_Constant = new Mouse_Buttoms();
+            this.MouseButtonsUp = new Mouse_Buttoms();
 
         }
         public static string GetEnum(object enumerator)
@@ -124,7 +134,7 @@
         }
         public string GetEnumName(object value)
         {
-            bool shift = this.pressedKeys.Contains<Keys>(Keys.LeftShift) || this.pressedKeys.Contains<Keys>(Keys.RightShift);
+            bool shift = this.pressedKeys_Constant.Contains<Keys>(Keys.LeftShift) || this.pressedKeys_Constant.Contains<Keys>(Keys.RightShift);
             string OEM = GetEnum(value);
             if (!shift)
             {
@@ -288,14 +298,39 @@
             }
             return OEM;
         }
-        public override void Update(GameTime gametime)
+        public void Update()
         {
 
             this.Old_keyboardState = this.keyboardState;
             this.keyboardState = Keyboard.GetState();
-            this.Old_pressedKeys = pressedKeys;
-            this.pressedKeys = Keyboard.GetState().GetPressedKeys();
-            if (this.pressedKeys.Contains<Keys>(Keys.CapsLock))
+            this.Old_pressedKeys = pressedKeys_Constant;
+            this.pressedKeys_Constant = keyboardState.GetPressedKeys();
+            List<Keys> tempkeys = new List<Keys>();
+            List<string> stringtempkeys = new List<string>();
+            List<string> stringtempkeys2 = new List<string>();
+            for (int i = 0; i < pressedKeys_Constant.Length; i++)
+            {
+                var stringkey = this.GetEnumName(this.pressedKeys_Constant[i]);
+                var key = pressedKeys_Constant[i];
+
+                stringtempkeys2.Add(stringkey);
+                if (!this.Old_pressedKeys.Contains(key))
+                {
+                    stringtempkeys.Add(stringkey);
+                    tempkeys.Add(key);
+                }
+            }
+            this.PressedKeys = tempkeys.ToArray();
+            this.StringKeys = stringtempkeys.ToArray();
+            this.StringKeys_Constant = stringtempkeys2.ToArray();
+
+
+
+
+
+
+
+            if (this.pressedKeys_Constant.Contains<Keys>(Keys.CapsLock))
             {
                 if (this.CapsLock)
                 {
@@ -306,23 +341,11 @@
                     this.CapsLock = true;
                 }
             }
-            this.Old_StringKeys = this.StringKeys_Constant;
-            this.StringKeys_Constant = new string[this.pressedKeys.Length];
-            for (int i = 0; i < this.pressedKeys.Length; i++)
-            {
-                this.StringKeys_Constant[i] = this.GetEnumName(this.pressedKeys[i]);
-            }
-            List<string> PressedKeysOnce = new List<string>();
-            for (int i = 0; i < StringKeys_Constant.Length; i++)
-            {
-                string key = StringKeys_Constant[i];
-                if (!Old_StringKeys.Contains<string>(key))
-                {
 
-                    PressedKeysOnce.Add(key);
-                }
-            }
-            this.StringKeys = PressedKeysOnce.ToArray();
+
+            FireDelegate(StringKeys_Constant.Length > 0, this.KeyboardKeys_Contant);
+            FireDelegate(StringKeys.Length > 0, this.KeyboardKeys_Once);
+
 
             this.Old_MouseState = this.MouseState;
             this.MouseState = Mouse.GetState();
@@ -360,17 +383,17 @@
 
             #region mousebuttomsDown
 
-   
+
             this.Old_MouseButtonsDown_Constant = this.MouseButtonsDown_Constant;
-            this.MouseButtonsDown_Constant = MouseButtons.None;
-            this.MouseButtonsDown = MouseButtons.None;
-            CheckButtom(this.MouseState.RightButton, ButtonState.Pressed, MouseButtons.Right, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
-            CheckButtom(this.MouseState.LeftButton, ButtonState.Pressed, MouseButtons.Left, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
-            CheckButtom(this.MouseState.MiddleButton, ButtonState.Pressed, MouseButtons.Middle, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
-            CheckButtom(this.MouseState.XButton1, ButtonState.Pressed, MouseButtons.XButton1, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
-            CheckButtom(this.MouseState.XButton2, ButtonState.Pressed, MouseButtons.XButton2, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
-            FireDelegate(MouseButtonsDown_Constant != MouseButtons.None, this.MouseDown_Constant);
-            FireDelegate(MouseButtonsDown != MouseButtons.None, this.MouseDown);
+            this.MouseButtonsDown_Constant = Mouse_Buttoms.None;
+            this.MouseButtonsDown = Mouse_Buttoms.None;
+            CheckButtom(this.MouseState.RightButton, ButtonState.Pressed, Mouse_Buttoms.Right, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.LeftButton, ButtonState.Pressed, Mouse_Buttoms.Left, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.MiddleButton, ButtonState.Pressed, Mouse_Buttoms.Middle, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.XButton1, ButtonState.Pressed, Mouse_Buttoms.XButton1, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            CheckButtom(this.MouseState.XButton2, ButtonState.Pressed, Mouse_Buttoms.XButton2, this.MouseButtonsDown_Constant, this.Old_MouseButtonsDown_Constant, this.MouseButtonsDown, out MouseButtonsDown_Constant, out MouseButtonsDown);
+            FireDelegate(MouseButtonsDown_Constant != Mouse_Buttoms.None, this.MouseDown_Constant);
+            FireDelegate(MouseButtonsDown != Mouse_Buttoms.None, this.MouseDown);
 
 
 
@@ -384,15 +407,15 @@
             #region mousebuttomsUp
 
             this.Old_MouseButtonsUp_Constant = this.MouseButtonsUp_Constant;
-            this.MouseButtonsUp_Constant = MouseButtons.None;
-            this.MouseButtonsUp = MouseButtons.None;
-            CheckButtom(this.MouseState.RightButton, ButtonState.Released, MouseButtons.Right, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
-            CheckButtom(this.MouseState.LeftButton, ButtonState.Released, MouseButtons.Left, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
-            CheckButtom(this.MouseState.MiddleButton, ButtonState.Released, MouseButtons.Middle, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
-            CheckButtom(this.MouseState.XButton1, ButtonState.Released, MouseButtons.XButton1, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
-            CheckButtom(this.MouseState.XButton2, ButtonState.Released, MouseButtons.XButton2, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
-            FireDelegate(MouseButtonsUp_Constant != MouseButtons.None, this.MouseUp_Constant);
-            FireDelegate(MouseButtonsUp != MouseButtons.None, this.MouseUp);
+            this.MouseButtonsUp_Constant = Mouse_Buttoms.None;
+            this.MouseButtonsUp = Mouse_Buttoms.None;
+            CheckButtom(this.MouseState.RightButton, ButtonState.Released, Mouse_Buttoms.Right, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.LeftButton, ButtonState.Released, Mouse_Buttoms.Left, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.MiddleButton, ButtonState.Released, Mouse_Buttoms.Middle, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.XButton1, ButtonState.Released, Mouse_Buttoms.XButton1, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            CheckButtom(this.MouseState.XButton2, ButtonState.Released, Mouse_Buttoms.XButton2, this.MouseButtonsUp_Constant, this.Old_MouseButtonsUp_Constant, this.MouseButtonsUp, out MouseButtonsUp_Constant, out this.MouseButtonsUp);
+            FireDelegate(MouseButtonsUp_Constant != Mouse_Buttoms.None, this.MouseUp_Constant);
+            FireDelegate(MouseButtonsUp != Mouse_Buttoms.None, this.MouseUp);
 
             #endregion
 
@@ -411,14 +434,14 @@
         }
 
 
-        private void CheckButtom(ButtonState buttonState, ButtonState buttostatetockeck, MouseButtons buttomtockeck, MouseButtons constant, MouseButtons oldconstant, MouseButtons once, out MouseButtons Constant, out MouseButtons Once)
+        private void CheckButtom(ButtonState buttonState, ButtonState buttostatetockeck, Mouse_Buttoms buttomtockeck, Mouse_Buttoms constant, Mouse_Buttoms oldconstant, Mouse_Buttoms once, out Mouse_Buttoms Constant, out Mouse_Buttoms Once)
         {
 
 
             if (buttonState == buttostatetockeck)
             {
                 //constant
-                if (constant == MouseButtons.None)
+                if (constant == Mouse_Buttoms.None)
                 {
                     constant = buttomtockeck;
                 }
@@ -429,7 +452,7 @@
                 //once
                 if (!oldconstant.HasFlag(buttomtockeck))
                 {
-                    if (once == MouseButtons.None)
+                    if (once == Mouse_Buttoms.None)
                     {
                         once = buttomtockeck;
                     }
@@ -461,13 +484,25 @@
             return this.StringKeys_Constant.Contains<string>(key);
            
         }
-        public bool IsTextPressed_Once(string key)
+        public bool IsTextPressed(string key)
         {
 
             return this.StringKeys.Contains<string>(key);
 
         }
 
+        public bool IsKeypressed_Continuous(Keys key)
+        {
+
+            return this.pressedKeys_Constant.Contains(key);
+
+        }
+        public bool IsKeypressed(Keys key)
+        {
+
+            return this.PressedKeys.Contains(key);
+
+        }
 
 
         public int X { get; set; }
@@ -476,7 +511,7 @@
 
         internal bool Contains(Keys keys)
         {
-            return this.pressedKeys.Contains(keys);
+            return this.pressedKeys_Constant.Contains(keys);
         }
         internal bool Contains(Keys[] keys)
         {
@@ -484,7 +519,7 @@
             {
                 Keys key = keys[i];
 
-                return this.pressedKeys.Contains(key);
+                return this.pressedKeys_Constant.Contains(key);
                 
             }
             return false;
